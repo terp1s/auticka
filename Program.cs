@@ -8,10 +8,11 @@ namespace auticka
 {
     class Automat
     {
-        public List<Vertex> Vrcholy;
-        public List<Hrana> Hrany;
-        Vertex Stav = new Vertex();
+        public List<Vertex> Vrcholy = new List<Vertex>();
+        public List<Hrana> Hrany = new List<Hrana>();
+        public Vertex Stav = new Vertex();
 
+        public bool StavZmena = false;
         public bool AcceptingState;
 
         public void ResetState()
@@ -26,10 +27,23 @@ namespace auticka
                 if(c == hrana.Hodnota)
                 {
                     Stav = hrana.Vrcholy[1];
+                    StavZmena = true;
                 }
+                
             }
-           
-            if(Stav.Koncovy == true)
+
+            if(StavZmena == false)
+            {
+                ResetState();
+                StavZmena = false;
+            }
+            else
+            {
+                StavZmena = false;
+
+            }
+
+            if (Stav.Koncovy == true)
             {
                 AcceptingState = true;
             }
@@ -41,11 +55,11 @@ namespace auticka
         
         public void Start()
         {
-            string[] input = Console.ReadLine().Split(' ');
+            string input = Console.ReadLine();
 
-            foreach(string pismeno in input)
+            foreach(char pismeno in input)
             {
-                Action(char.Parse(pismeno));
+                Action(pismeno);
             }
 
             if(AcceptingState == true)
@@ -65,12 +79,13 @@ namespace auticka
     }
     class Vertex
     {
-        public List<Hrana> Hrany;
+        public List<Hrana> Hrany = new List<Hrana>();
         public bool Koncovy = false;
+        public int Hodnota;
     }
     class Nacitani
     {
-        public Automat Automat()
+        public static Automat Automat()
         {
             Automat automat = new Automat();
 
@@ -78,16 +93,30 @@ namespace auticka
             int pocetHran = int.Parse(Console.ReadLine());
             
             automat.Vrcholy = new List<Vertex>(pocetVrch);
+
+            for (int i = 0; i < automat.Vrcholy.Capacity; i++)
+            {
+                automat.Vrcholy.Add(new Vertex());
+                automat.Vrcholy[i].Hodnota = i;
+            }
+
             automat.Hrany = new List<Hrana>(pocetHran);
 
-            for (int i = 0; i < automat.Hrany.Count; i++)
+            for (int i = 0; i < automat.Hrany.Capacity; i++)
+            {
+                automat.Hrany.Add(new Hrana());
+            }
+
+            for (int i = 0; i < automat.Hrany.Capacity; i++)
             {
                 string[] input = Console.ReadLine().Split(' ');
 
-                automat.Hrany[i].Vrcholy.Add(automat.Vrcholy[int.Parse(input[1])]);
                 automat.Hrany[i].Vrcholy.Add(automat.Vrcholy[int.Parse(input[0])]);
+                automat.Hrany[i].Vrcholy.Add(automat.Vrcholy[int.Parse(input[1])]);
                 automat.Hrany[i].Hodnota = char.Parse(input[2]);
 
+                automat.Vrcholy[int.Parse(input[1])].Hrany.Add(automat.Hrany[i]);
+                automat.Vrcholy[int.Parse(input[0])].Hrany.Add(automat.Hrany[i]);
             }
 
             string[] konce = Console.ReadLine().Split(' ');
@@ -97,14 +126,21 @@ namespace auticka
                 automat.Vrcholy[int.Parse(konec)].Koncovy = true;
             }
 
-            return automat;
+            automat.Stav = automat.Vrcholy[0];
 
+            return automat;
         }
     }
     class Program
     {
         static void Main(string[] args)
         {
+
+            Automat auto = Nacitani.Automat();
+
+            auto.Start();
+
+            Console.ReadKey();
         }
     }
 }
